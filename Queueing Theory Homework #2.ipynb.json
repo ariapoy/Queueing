@@ -1,0 +1,733 @@
+{
+ "metadata": {
+  "name": "",
+  "signature": "sha256:4400427331cff4796c17766d319fff78f570b827b7c2e4368d30e25dc610954f"
+ },
+ "nbformat": 3,
+ "nbformat_minor": 0,
+ "worksheets": [
+  {
+   "cells": [
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "#Queueing Theory Homework #2"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "This is the programming to solve the problem of problem 4 and problem 5"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "##problem 4"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Description of problem:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "The problem is to solve M/M/c/c queue.\n",
+      "\n",
+      "According to formula in textbook page. 82:\n",
+      "$$\n",
+      "p_{c} = B(c,r) = \\frac{r^{c}/c!}{\\sum_{i} r^{i}/i!}\n",
+      "$$\n",
+      "\n",
+      "But for c becomes larger, the error of B(c,r) could increase.\n",
+      "\n",
+      "The solution is also in the same page:\n",
+      "$$\n",
+      "B(c,r) = \\frac{rB(c-1,r)}{c+rB(c-1,r)}, c>=1\n",
+      "$$\n",
+      "\n",
+      "At this time, I'll compare results of two formula."
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###The condition given by problem:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Given parameters:\n",
+      "  - $\\lambda_1 = 40$ (calls/min);\n",
+      "  - $\\lambda_2 = 35$ (calls/min);\n",
+      "  - average duration $\\mu = 3$ (mins) $= 1/3$ (calls/min)\n"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Some formulate and parameter we need:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "First, we need $r$"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "r = (40+35)/(1./3)\n",
+      "print r"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "225.0\n"
+       ]
+      }
+     ],
+     "prompt_number": 2
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "And I need some tools to calculate *factorial*."
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "import scipy.misc"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 3
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Now, we can formulate $p_c$ directly:"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "def B(c,r):\n",
+      "    tmp = sum([r**i / scipy.misc.factorial(i) for i in xrange(c+1)])\n",
+      "    ans = (r**c/scipy.misc.factorial(c)) / tmp\n",
+      "    return ans\n",
+      "print B(1,2), B(2,2), B(3,2), B(4,2)"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "0.666666666667 0.4 0.210526315789 0.0952380952381\n"
+       ]
+      }
+     ],
+     "prompt_number": 4
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Note that the other approach is computational issue:"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "def rec_B(c,r):\n",
+      "    B = 1\n",
+      "    for i in xrange(1, c+1):\n",
+      "        B = r*B / float((i + r*B))\n",
+      "    ans = B\n",
+      "    return ans\n",
+      "print rec_B(1,2), rec_B(2,2), rec_B(3,2), rec_B(4,2)"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "0.666666666667 0.4 0.210526315789 0.0952380952381\n"
+       ]
+      }
+     ],
+     "prompt_number": 5
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "_Verify_: The answer in textbook example 2.7 is:"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "print 2/3., 2/5., 4/19., 2/21"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "0.666666666667 0.4 0.210526315789 0\n"
+       ]
+      }
+     ],
+     "prompt_number": 6
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Procedure to solve the problem 4"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "The follow function is the procedure to solve the problem, which is given $p_c$ and $r$.\n",
+      "\n",
+      "We need to find the $c$."
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "def proc_Erlang_B_formula_pc_r(pc, r):\n",
+      "\ttmp = 1\n",
+      "\tans = []\n",
+      "\tc = 0\n",
+      "\twhile tmp >= pc:\n",
+      "\t\tc = c+1\t\t\n",
+      "\t\ttmp = rec_B(c,r)\n",
+      "\t\tans.append(tmp)\n",
+      "\treturn c\n",
+      "print proc_Erlang_B_formula_pc_r(0.3, 2)\n",
+      "# Note: it can be corresponded to example 2.7 in textbook."
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "3\n"
+       ]
+      }
+     ],
+     "prompt_number": 7
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Answer (i) (ii) (iii) (iv)"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "## (i) pc < 0.3 %\n",
+      "print 'i', str(proc_Erlang_B_formula_pc_r(0.003, r))\n",
+      "## (ii) pc < 0.5 %\n",
+      "print 'ii', str(proc_Erlang_B_formula_pc_r(0.005, r))\n",
+      "## (iii) pc < 2 %\n",
+      "print 'iii', str(proc_Erlang_B_formula_pc_r(0.02, r))\n",
+      "## (iv) pc < 5 %\n",
+      "print 'iv', str(proc_Erlang_B_formula_pc_r(0.05, r))"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "i 257\n",
+        "ii 253\n",
+        "iii 240\n",
+        "iv "
+       ]
+      },
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "226\n"
+       ]
+      }
+     ],
+     "prompt_number": 8
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "##problem 5"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Description of problem:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "The problem is related to M/M/1/k \n",
+      " 1. calculate $W$ and $W_q$ in an \n",
+      " 2. Draw the curve (Obtain the results)\n",
+      "\n"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###The condition given by problem:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Given parameters:\n",
+      "\n",
+      "- $k = 10$\n",
+      "- $\\mu = 1$ /min\n"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "k = 10\n",
+      "mu = 1"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 9
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Some formulate and parameter we need:"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Let $\\rho = \\frac{\\lambda}{\\mu}$, we have\n",
+      "$$\n",
+      "\\bar{\\lambda} = \\lambda (1 - p_{k})\n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "p_{0} = \n",
+      "\\begin{aligned}\n",
+      "& \\frac{1- \\rho}{1 - \\rho^{k+1}} & \\mbox{if } \\rho \\neq 1\\\\\n",
+      "& \\frac{1}{k+1} & \\mbox{if } \\rho = 1\n",
+      "\\end{aligned}\n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "p_{n} = \n",
+      "\\begin{aligned}\n",
+      "& \\frac{1 - \\rho}{1 - \\rho^{k+1}} \\rho^{n} & \\mbox{if } \\rho \\neq 1\\\\\n",
+      "& \\frac{1}{k+1} & \\mbox{if } \\rho = 1\n",
+      "\\end{aligned}\n",
+      "\\mbox{ for } n = 0,1,2, \\dots, K \n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "L = \n",
+      "\\begin{aligned}\n",
+      "& \\frac{\\rho}{1 - \\rho} - \\frac{(k+1) \\rho^{k+1}}{1 - \\rho^{k+1}} & \\mbox{if } \\rho \\neq 1\\\\\n",
+      "& \\frac{k}{2} & \\mbox{if } \\rho = 1\n",
+      "\\end{aligned}\n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "L_{q} = L - (1 - p_{0})\n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "W = \\frac{L}{\\bar{\\lambda}}\n",
+      "$$\n",
+      "\n",
+      "$$\n",
+      "W_{q} = \\frac{L_{q}}{\\bar{\\lambda}}\n",
+      "$$\n"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "\n",
+      "def p0(lam, mu, k):\n",
+      "    rho = lam / float(mu)\n",
+      "    if rho == 1:\n",
+      "        ans = 1 / float(k+1)\n",
+      "    else:\n",
+      "        ans = (1 - rho) / (1 - rho**(k+1))\n",
+      "    return ans\n",
+      "def pn(lam, mu, n, k):\n",
+      "    rho = lam / float(mu)\n",
+      "    if rho == 1:\n",
+      "        ans = 1/ float(k+1)\n",
+      "    else:\n",
+      "        ans = (1 - rho) / (1 - rho**(k+1)) * rho**n\n",
+      "    return ans\n",
+      "def L(lam, mu, k):\n",
+      "    rho = lam / float(mu)\n",
+      "    if rho == 1:\n",
+      "        ans = k / 2.\n",
+      "    else:\n",
+      "        ans = float(rho) / (1 - rho) - (k + 1)* rho**(k + 1)/ (1 - rho**(k+ 1 ))\n",
+      "    return ans\n",
+      "def Lq(lam, mu, k):\n",
+      "    L_v = L(lam, mu, k)\n",
+      "    p0_v = p0(lam, mu, k)\n",
+      "    ans = L_v - (1 - p0_v)\n",
+      "    return ans\n",
+      "def eff_lam(lam, mu, k):\n",
+      "    rho = lam / float(mu)\n",
+      "    pk_v = pn(lam, mu, k, k)\n",
+      "    ans = lam * (1 - pk_v)\n",
+      "    return ans\n",
+      "def W(lam, mu, k):\n",
+      "    L_v = L(lam, mu, k)\n",
+      "    eff_lam_v = eff_lam(lam, mu, k)\n",
+      "    if eff_lam_v != 0:\n",
+      "        ans = L_v / float(eff_lam_v)\n",
+      "    else:\n",
+      "        ans = 1\n",
+      "    return ans\n",
+      "def Wq(lam, mu, k):\n",
+      "    Lq_v = Lq(lam, mu, k)\n",
+      "    eff_lam_v = eff_lam(lam, mu, k)\n",
+      "    if eff_lam_v != 0:\n",
+      "        ans = Lq_v / float(eff_lam_v)\n",
+      "    else:\n",
+      "        ans = 0\n",
+      "    return ans\n",
+      "print W(0.8, mu, k), W(1, mu, k)"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "3.79709750398 5.5\n"
+       ]
+      }
+     ],
+     "prompt_number": 29
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Procedure to solve the problem 5"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "The follow function is the procedure to solve the problem,\n",
+      "\n",
+      "for $\\lambda = 0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0$ /min\n",
+      "\n",
+      "We'll use above formulas to obtain $W$ and $W_{q}$"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "def proc_cal_W(LAM): # LAM is list of many lams\n",
+      "    W_list = map(lambda x: W(x, mu, k), LAM)\n",
+      "    Wq_list = map(lambda x: Wq(x, mu, k), LAM)\n",
+      "    ans = [W_list, Wq_list]\n",
+      "    return ans"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 30
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "###Answer $W$ and $W_q$ and figure"
+     ]
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Now, let me draw the picture of the answer.\n",
+      "\n",
+      "First, we need some tools."
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "import pandas as pd"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 31
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "And the answer of list of $W$ and $W_{q}$ is here:"
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "ans_v = proc_cal_W([0, 0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0])\n",
+      "ANS = pd.DataFrame(ans_v)\n",
+      "ANS = ANS.T\n",
+      "ANS.columns = ['W', 'Wq']\n",
+      "ANS['Lam'] = [0, 0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0]\n",
+      "ANS.reindex(columns= ['Lam', 'W', 'Wq'])"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "html": [
+        "<div style=\"max-height:1000px;max-width:1500px;overflow:auto;\">\n",
+        "<table border=\"1\" class=\"dataframe\">\n",
+        "  <thead>\n",
+        "    <tr style=\"text-align: right;\">\n",
+        "      <th></th>\n",
+        "      <th>Lam</th>\n",
+        "      <th>W</th>\n",
+        "      <th>Wq</th>\n",
+        "    </tr>\n",
+        "  </thead>\n",
+        "  <tbody>\n",
+        "    <tr>\n",
+        "      <th>0 </th>\n",
+        "      <td> 0.0</td>\n",
+        "      <td> 1.000000</td>\n",
+        "      <td> 0.000000</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>1 </th>\n",
+        "      <td> 0.2</td>\n",
+        "      <td> 1.249999</td>\n",
+        "      <td> 0.249999</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>2 </th>\n",
+        "      <td> 0.4</td>\n",
+        "      <td> 1.665618</td>\n",
+        "      <td> 0.665618</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>3 </th>\n",
+        "      <td> 0.6</td>\n",
+        "      <td> 2.439166</td>\n",
+        "      <td> 1.439166</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>4 </th>\n",
+        "      <td> 0.8</td>\n",
+        "      <td> 3.797098</td>\n",
+        "      <td> 2.797098</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>5 </th>\n",
+        "      <td> 1.0</td>\n",
+        "      <td> 5.500000</td>\n",
+        "      <td> 4.500000</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>6 </th>\n",
+        "      <td> 1.2</td>\n",
+        "      <td> 6.926138</td>\n",
+        "      <td> 5.926138</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>7 </th>\n",
+        "      <td> 1.4</td>\n",
+        "      <td> 7.858096</td>\n",
+        "      <td> 6.858096</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>8 </th>\n",
+        "      <td> 1.6</td>\n",
+        "      <td> 8.425118</td>\n",
+        "      <td> 7.425118</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>9 </th>\n",
+        "      <td> 1.8</td>\n",
+        "      <td> 8.778086</td>\n",
+        "      <td> 7.778086</td>\n",
+        "    </tr>\n",
+        "    <tr>\n",
+        "      <th>10</th>\n",
+        "      <td> 2.0</td>\n",
+        "      <td> 9.009775</td>\n",
+        "      <td> 8.009775</td>\n",
+        "    </tr>\n",
+        "  </tbody>\n",
+        "</table>\n",
+        "<p>11 rows \u00d7 3 columns</p>\n",
+        "</div>"
+       ],
+       "metadata": {},
+       "output_type": "pyout",
+       "prompt_number": 32,
+       "text": [
+        "    Lam         W        Wq\n",
+        "0   0.0  1.000000  0.000000\n",
+        "1   0.2  1.249999  0.249999\n",
+        "2   0.4  1.665618  0.665618\n",
+        "3   0.6  2.439166  1.439166\n",
+        "4   0.8  3.797098  2.797098\n",
+        "5   1.0  5.500000  4.500000\n",
+        "6   1.2  6.926138  5.926138\n",
+        "7   1.4  7.858096  6.858096\n",
+        "8   1.6  8.425118  7.425118\n",
+        "9   1.8  8.778086  7.778086\n",
+        "10  2.0  9.009775  8.009775\n",
+        "\n",
+        "[11 rows x 3 columns]"
+       ]
+      }
+     ],
+     "prompt_number": 32
+    },
+    {
+     "cell_type": "markdown",
+     "metadata": {},
+     "source": [
+      "Show on the ipython notebook directly."
+     ]
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "%pylab inline"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "output_type": "stream",
+       "stream": "stdout",
+       "text": [
+        "Populating the interactive namespace from numpy and matplotlib\n"
+       ]
+      }
+     ],
+     "prompt_number": 33
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [
+      "ANS.plot(x = ANS.Lam)"
+     ],
+     "language": "python",
+     "metadata": {},
+     "outputs": [
+      {
+       "metadata": {},
+       "output_type": "pyout",
+       "prompt_number": 34,
+       "text": [
+        "<matplotlib.axes.AxesSubplot at 0x1087f8610>"
+       ]
+      },
+      {
+       "metadata": {},
+       "output_type": "display_data",
+       "png": "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\n",
+       "text": [
+        "<matplotlib.figure.Figure at 0x1087ffb10>"
+       ]
+      }
+     ],
+     "prompt_number": 34
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": [],
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    }
+   ],
+   "metadata": {}
+  }
+ ]
+}
